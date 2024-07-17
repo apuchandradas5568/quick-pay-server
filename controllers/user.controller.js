@@ -53,8 +53,9 @@ export const loginUser = async (req, res) => {
       const token = generateToken(user._id);
       res.cookie("quickToken", token, {
         expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        secure: false,
+        secure: true,
         httpOnly: true,
+        sameSite: 'None'
       });
       return res.status(200).json({
         user,
