@@ -1,19 +1,26 @@
 import jwt from "jsonwebtoken";
+import User from "../model/user.model.js";
 
-const verifyToken = (req, res, next) => {
+const verifyToken = async (req, res, next) => {
 
-  if (!req.headers.authorization) {
-    return res.status(401).send({ message: "unauthorized access" });
+  let token;
+
+  if (
+      req.cookies.quickToken
+  ) {
+      try {
+          token = req.cookies?.quickToken
+          const decoded = jwt.verify(token, process.env.JWT_SECRET);
+          req.user = await User.findById(decoded.id).select('-pin');
+          next();
+      } catch (error) {
+          res.status(401).json({ message: 'Not authorized, token failed' });
+      }
   }
-  const token = req.headers.authorization.split(" ")[1];
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return res.status(401).send({ message: "unauthorized access" });
-    }
-    req.user = decoded;
-    next();
-  });
-};
 
+  if (!token) {
+      res.status(401).json({ message: 'Not authorized, no token' });
+  }
+};
 
 export default verifyToken;
